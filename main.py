@@ -87,22 +87,12 @@ async def get_stream_url(query: str, api_key: str = Depends(verify_api_key)):
 if __name__ == "__main__":
     import uvicorn
     
-    # Run Telegram Bot safely using asyncio inside a thread
-    def run_telegram_bot():
+    # Telegram Bot को थ्रेड में चलाने का सही तरीका
+    def start_bot_thread():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.run_until_complete(bot.start())
-        # Keep the bot running
-        import idle
-        # Alternatively use asyncio idle
-        loop.run_forever()
-
-    # Use a simpler approach for pyrogram inside thread:
-    def start_bot_thread():
-        app_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(app_loop)
-        app_loop.run_until_complete(bot.start())
-        app_loop.run_forever()
+        # Pyrogram client run loop
+        bot.run()
 
     threading.Thread(target=start_bot_thread, daemon=True).start()
     
