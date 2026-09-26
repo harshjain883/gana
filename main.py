@@ -87,15 +87,21 @@ async def get_stream_url(query: str, api_key: str = Depends(verify_api_key)):
 if __name__ == "__main__":
     import uvicorn
     
-    # Telegram Bot को थ्रेड में चलाने का सही तरीका
+    # थ्रेड के अंदर बोट को बिना सिग्नल एरर के चलाने का सुरक्षित तरीका
     def start_bot_thread():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        # Pyrogram client run loop
-        bot.run()
+        
+        async def main_runner():
+            await bot.start()
+            # बोट को चालू रखने के लिए इनफिनिट स्लीप
+            while True:
+                await asyncio.sleep(3600)
+
+        loop.run_until_complete(main_runner())
 
     threading.Thread(target=start_bot_thread, daemon=True).start()
     
-    # Run FastAPI server
+    # FastAPI सर्वर रन करें
     uvicorn.run(app, host="0.0.0.0", port=8000)
     
