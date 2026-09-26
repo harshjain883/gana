@@ -87,21 +87,25 @@ async def get_stream_url(query: str, api_key: str = Depends(verify_api_key)):
 if __name__ == "__main__":
     import uvicorn
     
-    # थ्रेड के अंदर बोट को बिना सिग्नल एरर के चलाने का सुरक्षित तरीका
     def start_bot_thread():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         
         async def main_runner():
-            await bot.start()
-            # बोट को चालू रखने के लिए इनफिनिट स्लीप
-            while True:
-                await asyncio.sleep(3600)
+            try:
+                print("🤖 Starting Telegram Bot...")
+                await bot.start()
+                print("✅ Telegram Bot Started Successfully!")
+                while True:
+                    await asyncio.sleep(3600)
+            except Exception as e:
+                print(f"❌ Telegram Bot Error: {e}")
 
         loop.run_until_complete(main_runner())
 
+    # बोट को थ्रेड में शुरू करें
     threading.Thread(target=start_bot_thread, daemon=True).start()
     
     # FastAPI सर्वर रन करें
+    print("🚀 Starting FastAPI Server...")
     uvicorn.run(app, host="0.0.0.0", port=8000)
-    
