@@ -2,5 +2,5 @@ fastapi
 uvicorn
 pyrogram
 tgcrypto
-youtubei.js
 pydantic
+
