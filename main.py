@@ -28,9 +28,16 @@ async def generate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         API_KEYS_DB[new_key] = user_id
         existing_key = new_key
 
-    base_url = os.getenv("RAILWAY_STATIC_URL") or os.getenv("RENDER_EXTERNAL_URL") or "http://localhost:8000"
-    if not base_url.startswith("http"):
-        base_url = f"https://{base_url}"
+    # Railway ke official environment variables se direct public URL uthane ka tarika
+    domain = os.getenv("RAILWAY_PUBLIC_DOMAIN") or os.getenv("RAILWAY_STATIC_URL")
+    
+    if domain:
+        base_url = f"https://{domain}"
+    else:
+        # Agar Railway ka variable na mile, toh aap yahan apna custom domain ya fallback daal sakte hain
+        base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000")
+        if base_url and not base_url.startswith("http"):
+            base_url = f"https://{base_url}"
     
     response_text = (
         f"✅ **Your Permanent Spotify API Key Generated Successfully!**\n\n"
