@@ -1,6 +1,4 @@
 fastapi
 uvicorn
-pyrogram
-tgcrypto
+python-telegram-bot
 pydantic
-
