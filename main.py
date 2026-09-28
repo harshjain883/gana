@@ -7,11 +7,9 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 app = FastAPI(title="Spotify Music Bridge API")
 
-# In-memory database for keys
 API_KEYS_DB = {}
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 
-# Telegram Handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "👋 **Welcome to Spotify Music API Generator Bot!**\n\n"
@@ -50,7 +48,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "3. Your music bot will now stream restriction-free songs!"
     )
 
-# FastAPI Endpoints
 def verify_api_key(x_api_key: str = Header(None)):
     if not x_api_key or x_api_key not in API_KEYS_DB:
         raise HTTPException(status_code=403, detail="Invalid or Missing Permanent Spotify API Key")
@@ -74,14 +71,12 @@ async def main():
         print("❌ Error: BOT_TOKEN environment variable is missing!")
         return
 
-    # 1. Build Telegram Application
     tg_app = ApplicationBuilder().token(BOT_TOKEN).build()
     
     tg_app.add_handler(CommandHandler("start", start))
     tg_app.add_handler(CommandHandler("generate", generate))
     tg_app.add_handler(CommandHandler("help", help_command))
 
-    # 2. Start Telegram Bot and FastAPI Server concurrently in the main thread
     import uvicorn
     from uvicorn import Config, Server
 
@@ -94,10 +89,8 @@ async def main():
     await tg_app.start()
     await tg_app.updater.start_polling()
 
-    # Run Uvicorn server alongside
     await server.serve()
 
-    # Cleanup on exit
     await tg_app.updater.stop()
     await tg_app.stop()
     await tg_app.shutdown()
