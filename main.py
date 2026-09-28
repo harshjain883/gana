@@ -94,10 +94,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await start(update, context)
 
 # FastAPI Endpoints
-def verify_api_key(x_api_key: str = Header(None)):
-    if not x_api_key or x_api_key not in API_KEYS_DB:
+from fastapi import Query
+
+def verify_api_key(x_api_key: str = Header(None), api_key: str = Query(None)):
+    # Header ya URL query parameter dono mein se kahin bhi key ho toh verify karega
+    key_to_check = x_api_key or api_key
+    if not key_to_check or key_to_check not in API_KEYS_DB:
         raise HTTPException(status_code=403, detail="Invalid API Key")
-    return x_api_key
+    return key_to_check
 
 @app.get("/")
 async def root():
