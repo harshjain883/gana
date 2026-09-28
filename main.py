@@ -1,5 +1,6 @@
 import os
 import uuid
+import asyncio
 from fastapi import FastAPI, HTTPException, Header, Depends
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
@@ -8,7 +9,6 @@ app = FastAPI(title="Spotify Music Bridge API")
 
 # In-memory database for keys
 API_KEYS_DB = {}
-
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 
 # Telegram Handlers
@@ -69,28 +69,38 @@ async def get_stream_url(query: str, api_key: str = Depends(verify_api_key)):
         "provider": "Spotify Music Engine"
     }
 
-if __name__ == "__main__":
+async def main():
+    if not BOT_TOKEN:
+        print("❌ Error: BOT_TOKEN environment variable is missing!")
+        return
+
+    # 1. Build Telegram Application
+    tg_app = ApplicationBuilder().token(BOT_TOKEN).build()
+    
+    tg_app.add_handler(CommandHandler("start", start))
+    tg_app.add_handler(CommandHandler("generate", generate))
+    tg_app.add_handler(CommandHandler("help", help_command))
+
+    # 2. Start Telegram Bot and FastAPI Server concurrently in the main thread
     import uvicorn
-    import threading
+    from uvicorn import Config, Server
 
-    # Telegram Bot runner using python-telegram-bot
-    def run_telegram_bot():
-        if not BOT_TOKEN:
-            print("❌ Error: BOT_TOKEN environment variable is missing!")
-            return
-        
-        application = ApplicationBuilder().token(BOT_TOKEN).build()
-        
-        application.add_handler(CommandHandler("start", start))
-        application.add_handler(CommandHandler("generate", generate))
-        application.add_handler(CommandHandler("help", help_command))
-        
-        print("🤖 Telegram Bot Polling Started...")
-        application.run_polling()
+    config = Config(app=app, host="0.0.0.0", port=8000, log_level="info")
+    server = Server(config)
 
-    # Start bot in a background thread
-    threading.Thread(target=run_telegram_bot, daemon=True).start()
+    print("🤖 Starting Telegram Bot & FastAPI Server together...")
+    
+    await tg_app.initialize()
+    await tg_app.start()
+    await tg_app.updater.start_polling()
 
-    # Run FastAPI server
-    print("🚀 Starting FastAPI Server...")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Run Uvicorn server alongside
+    await server.serve()
+
+    # Cleanup on exit
+    await tg_app.updater.stop()
+    await tg_app.stop()
+    await tg_app.shutdown()
+
+if __name__ == "__main__":
+    asyncio.run(main())
